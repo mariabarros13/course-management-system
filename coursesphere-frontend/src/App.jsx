@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 
 import CourseDetails from "./pages/CourseDetails";
 
+import PrivateRoute from "./routes/PrivateRoute";
 function App() {
 
     return (
@@ -25,12 +26,16 @@ function App() {
 
                 <Route
                     path="/dashboard"
-                    element={<Dashboard />}
+                    element={<PrivateRoute>
+                                <Dashboard />
+                            </PrivateRoute>}
                 />
 
                 <Route
                     path="/courses/:id"
-                    element={<CourseDetails />}
+                    element={<PrivateRoute>
+                                <CourseDetails />
+                            </PrivateRoute>}
                 />
 
             </Routes>
