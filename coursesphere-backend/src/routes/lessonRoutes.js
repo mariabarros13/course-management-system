@@ -18,4 +18,10 @@ router.delete(
     LessonController.delete
 );
 
+router.put(
+    "/:id",
+    authMiddleware,
+    LessonController.update
+);
+
 module.exports = router;

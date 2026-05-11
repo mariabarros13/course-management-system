@@ -60,7 +60,10 @@ class LessonController {
                 }
 
                 // verifica dono do curso
-                if (course.creator_id !== user_id) {
+                if (
+                        Number(course.creator_id) !==
+                        Number(user_id)
+                ) {
 
                     return res.status(403).json({
                         error: "Sem permissão"
@@ -186,7 +189,10 @@ class LessonController {
                     }
 
                     // verifica dono
-                    if (course.creator_id !== user_id) {
+                    if (
+                        Number(course.creator_id) !==
+                        Number(user_id)
+                    ) {
 
                         return res.status(403).json({
                             error: "Sem permissão"
@@ -215,6 +221,123 @@ class LessonController {
             );
         }
     );
+  }
+  static update(req, res) {
+
+    const { id } = req.params;
+
+    const {
+        title,
+        status,
+        video_url
+    } = req.body;
+
+    const user_id = req.user.id;
+
+    // validações
+    if (!title || !status) {
+
+        return res.status(400).json({
+            error: "Campos obrigatórios"
+        });
     }
+
+    if (title.length < 3) {
+
+        return res.status(400).json({
+            error: "Título inválido"
+        });
+    }
+
+    if (
+        status !== "draft" &&
+        status !== "published"
+    ) {
+
+        return res.status(400).json({
+            error: "Status inválido"
+        });
+    }
+
+    // busca lesson
+    db.get(
+        "SELECT * FROM lessons WHERE id = ?",
+        [id],
+        (err, lesson) => {
+
+            if (err) {
+
+                return res.status(500).json({
+                    error: "Erro no banco"
+                });
+            }
+
+            if (!lesson) {
+
+                return res.status(404).json({
+                    error: "Lesson não encontrada"
+                });
+            }
+
+            // busca curso da lesson
+            db.get(
+                "SELECT * FROM courses WHERE id = ?",
+                [lesson.course_id],
+                (err, course) => {
+
+                    if (err) {
+
+                        return res.status(500).json({
+                            error: "Erro no banco"
+                        });
+                    }
+
+                    // verifica dono
+                    if (
+                        Number(course.creator_id) !==
+                        Number(user_id)
+                    ) {
+
+                        return res.status(403).json({
+                            error: "Sem permissão"
+                        });
+                    }
+
+                    // atualiza lesson
+                    db.run(
+                        `
+                        UPDATE lessons
+                        SET
+                            title = ?,
+                            status = ?,
+                            video_url = ?
+                        WHERE id = ?
+                        `,
+                        [
+                            title,
+                            status,
+                            video_url,
+                            id
+                        ],
+                        function(err) {
+
+                            if (err) {
+
+                                return res.status(500).json({
+                                    error: "Erro ao atualizar lesson"
+                                });
+                            }
+
+                            return res.json({
+                                message: "Lesson atualizada"
+                            });
+                        }
+                    );
+                }
+            );
+        }
+    );
 }
+}
+
 module.exports = LessonController;

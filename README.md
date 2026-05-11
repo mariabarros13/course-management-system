@@ -14,6 +14,16 @@ O sistema permite:
 - dashboard moderna
 - CRUD completo
 
+## Dados para teste
+
+Usuário 1:
+email: admin@test.com
+senha: 123456
+
+Usuário 2:
+email: user@test.com
+senha: 123456
+
 ---
 
 # Tecnologias
