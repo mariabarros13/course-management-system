@@ -1,8 +1,11 @@
-import { useEffect, useState } from "react";
-
-import api from "../services/api";
+import {
+    useEffect,
+    useState
+} from "react";
 
 import { Link } from "react-router-dom";
+
+import api from "../services/api";
 
 export default function Dashboard() {
 
@@ -15,6 +18,16 @@ export default function Dashboard() {
     const [startDate, setStartDate] = useState("");
 
     const [endDate, setEndDate] = useState("");
+
+    const [editingCourseId, setEditingCourseId] = useState(null);
+
+    const [editName, setEditName] = useState("");
+
+    const [editDescription, setEditDescription] = useState("");
+
+    const [editStartDate, setEditStartDate] = useState("");
+
+    const [editEndDate, setEditEndDate] = useState("");
 
     async function loadCourses() {
 
@@ -37,7 +50,9 @@ export default function Dashboard() {
 
             console.log(error);
 
-            alert("Erro ao buscar cursos");
+            alert(
+                error.response?.data?.message || "Erro"
+            );
         }
     }
 
@@ -64,23 +79,104 @@ export default function Dashboard() {
                 }
             );
 
-            alert("Curso criado");
-
-            // limpa formulário
             setName("");
             setDescription("");
             setStartDate("");
             setEndDate("");
 
-            // atualiza lista
+            loadCourses();
+
+        } catch (error) {
+
+            console.log(error);
+        }
+    }
+
+    async function handleDeleteCourse(id) {
+
+        const confirmDelete = confirm(
+            "Deseja deletar este curso?"
+        );
+
+        if (!confirmDelete) {
+
+            return;
+        }
+
+        try {
+
+            const token = localStorage.getItem("token");
+
+            await api.delete(
+                `/courses/${id}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
             loadCourses();
 
         } catch (error) {
 
             console.log(error);
 
-            alert("Erro ao criar curso");
+            alert("Erro ao deletar curso");
         }
+    }
+
+    function handleStartEdit(course) {
+
+        setEditingCourseId(course.id);
+
+        setEditName(course.name);
+
+        setEditDescription(course.description);
+
+        setEditStartDate(course.start_date);
+
+        setEditEndDate(course.end_date);
+    }
+
+    async function handleSaveEdit(id) {
+
+        try {
+
+            const token = localStorage.getItem("token");
+
+            await api.put(
+                `/courses/${id}`,
+                {
+                    name: editName,
+                    description: editDescription,
+                    start_date: editStartDate,
+                    end_date: editEndDate
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
+            setEditingCourseId(null);
+
+            loadCourses();
+
+        } catch (error) {
+
+            console.log(error);
+
+            alert("Erro ao editar curso");
+        }
+    }
+
+    function handleLogout() {
+
+        localStorage.removeItem("token");
+
+        window.location.href = "/";
     }
 
     useEffect(() => {
@@ -89,117 +185,218 @@ export default function Dashboard() {
 
     }, []);
 
-    function handleLogout() {
-
-        localStorage.removeItem("token");
-
-        window.location.href = "/";
-    }
     return (
-        <div style={{ padding: "20px" }}>
 
-            <h1>Dashboard</h1>
+        <div className="min-h-screen bg-gray-100">
 
-            <button onClick={handleLogout}>
-                Logout
-            </button>
-            
-            <h2>Novo Curso</h2>
+            {/* NAVBAR */}
+            <header className="bg-white shadow">
 
-            <form onSubmit={handleCreateCourse}>
+                <div className="max-w-6xl mx-auto px-6 py-4 flex justify-between items-center">
 
-                <input
-                    type="text"
-                    placeholder="Nome"
-                    value={name}
-                    onChange={(event) =>
-                        setName(event.target.value)
-                    }
-                />
+                    <h1 className="text-2xl font-bold text-blue-600">
+                        CourseSphere
+                    </h1>
 
-                <br />
-                <br />
+                    <button
+                        onClick={handleLogout}
+                        className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg"
+                    >
+                        Logout
+                    </button>
 
-                <textarea
-                    placeholder="Descrição"
-                    value={description}
-                    onChange={(event) =>
-                        setDescription(event.target.value)
-                    }
-                />
+                </div>
 
-                <br />
-                <br />
+            </header>
 
-                <input
-                    type="date"
-                    value={startDate}
-                    onChange={(event) =>
-                        setStartDate(event.target.value)
-                    }
-                />
+            <main className="max-w-6xl mx-auto p-6">
 
-                <br />
-                <br />
+                {/* FORM */}
+                <div className="bg-white rounded-2xl shadow p-6 mb-8">
 
-                <input
-                    type="date"
-                    value={endDate}
-                    onChange={(event) =>
-                        setEndDate(event.target.value)
-                    }
-                />
+                    <h2 className="text-2xl font-bold mb-6">
+                        Novo Curso
+                    </h2>
 
-                <br />
-                <br />
-
-                <button type="submit">
-                    Criar Curso
-                </button>
-
-            </form>
-
-            <hr />
-
-            <h2>Cursos</h2>
-
-            {
-                courses.map((course) => (
-
-                    <div
-                        key={course.id}
-                        style={{
-                            border: "1px solid black",
-                            marginBottom: "10px",
-                            padding: "10px"
-                        }}
+                    <form
+                        onSubmit={handleCreateCourse}
+                        className="space-y-4"
                     >
 
-                        <h3>{course.name}</h3>
+                        <input
+                            type="text"
+                            placeholder="Nome do curso"
+                            value={name}
+                            onChange={(event) =>
+                                setName(event.target.value)
+                            }
+                            className="w-full border rounded-lg p-3"
+                        />
 
-                        <p>
-                            {course.description}
-                        </p>
+                        <textarea
+                            placeholder="Descrição"
+                            value={description}
+                            onChange={(event) =>
+                                setDescription(event.target.value)
+                            }
+                            className="w-full border rounded-lg p-3"
+                        />
 
-                        <p>
-                            Criado por:
-                            {" "}
-                            {course.creator_name}
-                        </p>
+                        <div className="grid grid-cols-2 gap-4">
 
-                        <Link to={`/courses/${course.id}`}>
-                            Ver Curso
-                        </Link>
+                            <input
+                                type="date"
+                                value={startDate}
+                                onChange={(event) =>
+                                    setStartDate(event.target.value)
+                                }
+                                className="border rounded-lg p-3"
+                            />
 
-                        <p>
-                            {course.start_date}
-                            {" - "}
-                            {course.end_date}
-                        </p>
+                            <input
+                                type="date"
+                                value={endDate}
+                                onChange={(event) =>
+                                    setEndDate(event.target.value)
+                                }
+                                className="border rounded-lg p-3"
+                            />
+
+                        </div>
+
+                        <button
+                            type="submit"
+                            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold"
+                        >
+                            Criar Curso
+                        </button>
+
+                    </form>
+
+                </div>
+
+                {/* COURSES */}
+                <div>
+
+                    <h2 className="text-3xl font-bold mb-6">
+                        Cursos
+                    </h2>
+
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                        {
+                            courses.map((course) => (
+
+                                <div
+                                    key={course.id}
+                                    className="bg-white rounded-2xl shadow p-6 hover:shadow-lg transition"
+                                >
+
+                                    <h3 className="text-xl font-bold mb-2">
+                                        {course.name}
+                                    </h3>
+
+                                    <p className="text-gray-600 mb-4">
+                                        {course.description}
+                                    </p>
+
+                                    <p className="text-sm text-gray-500 mb-4">
+                                        {course.start_date}
+                                        {" - "}
+                                        {course.end_date}
+                                    </p>
+
+                                    {
+                                        editingCourseId === course.id && (
+
+                                            <div className="mt-4 space-y-3">
+
+                                                <input
+                                                    type="text"
+                                                    value={editName}
+                                                    onChange={(event) =>
+                                                        setEditName(event.target.value)
+                                                    }
+                                                    className="w-full border rounded-lg p-2"
+                                                />
+
+                                                <textarea
+                                                    value={editDescription}
+                                                    onChange={(event) =>
+                                                        setEditDescription(event.target.value)
+                                                    }
+                                                    className="w-full border rounded-lg p-2"
+                                                />
+
+                                                <div className="grid grid-cols-2 gap-2">
+
+                                                    <input
+                                                        type="date"
+                                                        value={editStartDate}
+                                                        onChange={(event) =>
+                                                            setEditStartDate(event.target.value)
+                                                        }
+                                                        className="border rounded-lg p-2"
+                                                    />
+
+                                                    <input
+                                                        type="date"
+                                                        value={editEndDate}
+                                                        onChange={(event) =>
+                                                            setEditEndDate(event.target.value)
+                                                        }
+                                                        className="border rounded-lg p-2"
+                                                    />
+
+                                                </div>
+
+                                                <button
+                                                    onClick={() =>
+                                                        handleSaveEdit(course.id)
+                                                    }
+                                                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
+                                                >
+                                                    Salvar
+                                                </button>
+
+                                            </div>
+                                        )
+                                    }
+
+                                    <Link
+                                        to={`/courses/${course.id}`}
+                                        className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+                                    >
+                                        Ver Curso
+                                    </Link>
+
+                                    <button
+                                        onClick={() =>
+                                            handleDeleteCourse(course.id)
+                                        }
+                                        className="ml-3 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg"
+                                    >
+                                        Deletar
+                                    </button>
+
+                                    <button
+                                        onClick={() =>
+                                            handleStartEdit(course)
+                                        }
+                                        className="ml-3 bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg"
+                                    >
+                                        Editar
+                                    </button>
+
+                                </div>
+                            ))
+                        }
 
                     </div>
-                ))
-            }
+
+                </div>
+
+            </main>
 
         </div>
     );

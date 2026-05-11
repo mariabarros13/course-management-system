@@ -21,6 +21,14 @@ export default function CourseDetails() {
 
     const [videoUrl, setVideoUrl] = useState("");
 
+    const [editingLessonId, setEditingLessonId] = useState(null);
+
+    const [editTitle, setEditTitle] = useState("");
+
+    const [editStatus, setEditStatus] = useState("");
+
+    const [editVideoUrl, setEditVideoUrl] = useState("");
+
     async function loadCourse() {
 
         try {
@@ -97,6 +105,82 @@ export default function CourseDetails() {
             console.log(error);
 
             alert("Erro ao criar lesson");
+        }
+    }
+    async function handleDeleteLesson(id) {
+
+        const confirmDelete = confirm(
+            "Deseja deletar esta lesson?"
+        );
+
+        if (!confirmDelete) {
+
+            return;
+        }
+
+        try {
+
+            const token = localStorage.getItem("token");
+
+            await api.delete(
+                `/lessons/${id}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
+            loadCourse();
+
+        } catch (error) {
+
+            console.log(error);
+
+            alert("Erro ao deletar lesson");
+        }
+    }
+
+    function handleStartLessonEdit(lesson) {
+
+        setEditingLessonId(lesson.id);
+
+        setEditTitle(lesson.title);
+
+        setEditStatus(lesson.status);
+
+        setEditVideoUrl(lesson.video_url);
+    }
+
+    async function handleSaveLessonEdit(id) {
+
+        try {
+
+            const token = localStorage.getItem("token");
+
+            await api.put(
+                `/lessons/${id}`,
+                {
+                    title: editTitle,
+                    status: editStatus,
+                    video_url: editVideoUrl
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
+            setEditingLessonId(null);
+
+            loadCourse();
+
+        } catch (error) {
+
+            console.log(error);
+
+            alert("Erro ao editar lesson");
         }
     }
 
@@ -220,6 +304,82 @@ export default function CourseDetails() {
                             >
                                 Ver vídeo
                             </a>
+
+                            {
+                                editingLessonId === lesson.id && (
+
+                                    <div className="mt-4 space-y-3">
+
+                                        <input
+                                            type="text"
+                                            value={editTitle}
+                                            onChange={(event) =>
+                                                setEditTitle(event.target.value)
+                                            }
+                                            className="w-full border rounded-lg p-2"
+                                        />
+
+                                        <input
+                                            type="text"
+                                            value={editVideoUrl}
+                                            onChange={(event) =>
+                                                setEditVideoUrl(event.target.value)
+                                            }
+                                            className="w-full border rounded-lg p-2"
+                                        />
+
+                                        <select
+                                            value={editStatus}
+                                            onChange={(event) =>
+                                                setEditStatus(event.target.value)
+                                            }
+                                            className="w-full border rounded-lg p-2"
+                                        >
+
+                                            <option value="draft">
+                                                Draft
+                                            </option>
+
+                                            <option value="published">
+                                                Published
+                                            </option>
+
+                                        </select>
+
+                                        <button
+                                            onClick={() =>
+                                                handleSaveLessonEdit(lesson.id)
+                                            }
+                                            className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
+                                        >
+                                            Salvar
+                                        </button>
+
+                                    </div>
+                                )
+                            }
+
+                            <div className="mt-4">
+
+                                <button
+                                    onClick={() =>
+                                        handleDeleteLesson(lesson.id)
+                                    }
+                                    className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg"
+                                >
+                                    Deletar
+                                </button>
+
+                                <button
+                                    onClick={() =>
+                                        handleStartLessonEdit(lesson)
+                                    }
+                                    className="ml-3 bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg"
+                                >
+                                    Editar
+                                </button>
+
+                            </div>
 
                         </div>
                     ))

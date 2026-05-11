@@ -22,17 +22,12 @@ export default function Login() {
                 }
             );
 
-            // salva token
             localStorage.setItem(
                 "token",
                 response.data.token
             );
 
-            alert("Login realizado");
-
             window.location.href = "/dashboard";
-
-            console.log(response.data);
 
         } catch (error) {
 
@@ -43,41 +38,50 @@ export default function Login() {
     }
 
     return (
-        <div>
 
-            <h1>Login</h1>
+        <div className="min-h-screen flex items-center justify-center bg-gray-100">
 
-            <form onSubmit={handleLogin}>
+            <div className="bg-white p-10 rounded-2xl shadow w-full max-w-md">
 
-                <input
-                    type="email"
-                    placeholder="Email"
-                    value={email}
-                    onChange={(event) =>
-                        setEmail(event.target.value)
-                    }
-                />
+                <h1 className="text-3xl font-bold mb-8 text-center text-blue-600">
+                    CourseSphere
+                </h1>
 
-                <br />
-                <br />
+                <form
+                    onSubmit={handleLogin}
+                    className="space-y-4"
+                >
 
-                <input
-                    type="password"
-                    placeholder="Senha"
-                    value={password}
-                    onChange={(event) =>
-                        setPassword(event.target.value)
-                    }
-                />
+                    <input
+                        type="email"
+                        placeholder="Email"
+                        value={email}
+                        onChange={(event) =>
+                            setEmail(event.target.value)
+                        }
+                        className="w-full border rounded-lg p-3"
+                    />
 
-                <br />
-                <br />
+                    <input
+                        type="password"
+                        placeholder="Senha"
+                        value={password}
+                        onChange={(event) =>
+                            setPassword(event.target.value)
+                        }
+                        className="w-full border rounded-lg p-3"
+                    />
 
-                <button type="submit">
-                    Entrar
-                </button>
+                    <button
+                        type="submit"
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-semibold"
+                    >
+                        Entrar
+                    </button>
 
-            </form>
+                </form>
+
+            </div>
 
         </div>
     );
