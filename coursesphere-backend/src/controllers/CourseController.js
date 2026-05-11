@@ -76,6 +76,7 @@ class CourseController {
             courses.description,
             courses.start_date,
             courses.end_date,
+            courses.creator_id,
             users.name AS creator_name
         FROM courses
         JOIN users
@@ -107,6 +108,7 @@ class CourseController {
             courses.description,
             courses.start_date,
             courses.end_date,
+            courses.creator_id,
             users.name AS creator_name
         FROM courses
         JOIN users
@@ -168,7 +170,7 @@ class CourseController {
             }
 
             // verifica criador
-            if (course.creator_id !== user_id) {
+            if (Number(course.creator_id) !== Number(user_id)) {
 
                 return res.status(403).json({
                     error: "Sem permissão"
@@ -259,7 +261,7 @@ class CourseController {
             }
 
             // verifica dono
-            if (course.creator_id !== user_id) {
+            if (Number(course.creator_id) !== Number(user_id)) {
 
                 return res.status(403).json({
                     error: "Sem permissão"

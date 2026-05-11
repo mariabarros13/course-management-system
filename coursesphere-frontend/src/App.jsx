@@ -11,6 +11,9 @@ import Dashboard from "./pages/Dashboard";
 import CourseDetails from "./pages/CourseDetails";
 
 import PrivateRoute from "./routes/PrivateRoute";
+
+import Register from "./pages/Register";
+
 function App() {
 
     return (
@@ -36,6 +39,11 @@ function App() {
                     element={<PrivateRoute>
                                 <CourseDetails />
                             </PrivateRoute>}
+                />
+
+                <Route
+                    path="/register"
+                    element={<Register />}
                 />
 
             </Routes>

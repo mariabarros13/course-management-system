@@ -1,46 +1,44 @@
 import { useState } from "react";
-
+import { Link } from "react-router-dom";
 import api from "../services/api";
 
-import { Link } from "react-router-dom";
+export default function Register() {
 
-export default function Login() {
-
+    const [name, setName] = useState("");
     const [email, setEmail] = useState("");
-
     const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    async function handleLogin(event) {
+    async function handleRegister(event) {
 
         event.preventDefault();
 
+        setLoading(true);
+
         try {
 
-            const response = await api.post(
-                "/auth/login",
-                {
-                    email,
-                    password
-                }
-            );
+            await api.post("/auth/register", {
+                name,
+                email,
+                password
+            });
 
-            localStorage.setItem(
-                "token",
-                response.data.token
-            );
+            alert("Usuário criado com sucesso!");
 
-            localStorage.setItem(
-                "user",
-                JSON.stringify(response.data.user)
-            );
-
-            window.location.href = "/dashboard";
+            window.location.href = "/";
 
         } catch (error) {
 
             console.log(error);
 
-            alert("Erro no login");
+            if (error.response?.data?.error) {
+                alert(error.response.data.error);
+            } else {
+                alert("Erro ao criar usuário");
+            }
+
+        } finally {
+            setLoading(false);
         }
     }
 
@@ -50,14 +48,29 @@ export default function Login() {
 
             <div className="bg-white p-10 rounded-2xl shadow w-full max-w-md">
 
-                <h1 className="text-3xl font-bold mb-8 text-center text-blue-600">
-                    CourseSphere
+                <h1 className="text-3xl font-bold mb-2 text-center text-blue-600">
+                    Criar Conta
                 </h1>
 
+                <p className="text-gray-500 text-center mb-8">
+                    Cadastre-se no CourseSphere
+                </p>
+
                 <form
-                    onSubmit={handleLogin}
+                    onSubmit={handleRegister}
                     className="space-y-4"
                 >
+
+                    <input
+                        type="text"
+                        placeholder="Nome"
+                        value={name}
+                        onChange={(event) =>
+                            setName(event.target.value)
+                        }
+                        className="w-full border rounded-lg p-3"
+                        required
+                    />
 
                     <input
                         type="email"
@@ -67,6 +80,7 @@ export default function Login() {
                             setEmail(event.target.value)
                         }
                         className="w-full border rounded-lg p-3"
+                        required
                     />
 
                     <input
@@ -77,25 +91,27 @@ export default function Login() {
                             setPassword(event.target.value)
                         }
                         className="w-full border rounded-lg p-3"
+                        required
                     />
 
                     <button
                         type="submit"
+                        disabled={loading}
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-lg font-semibold"
                     >
-                        Entrar
+                        {loading ? "Criando conta..." : "Cadastrar"}
                     </button>
 
                 </form>
 
                 <p className="text-center mt-6 text-gray-600">
-                    Não possui conta?
+                    Já possui conta?
 
                     <Link
-                        to="/register"
+                        to="/"
                         className="text-blue-600 font-semibold ml-1"
                     >
-                        Criar conta
+                        Entrar
                     </Link>
                 </p>
 

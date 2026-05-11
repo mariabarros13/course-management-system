@@ -121,7 +121,13 @@ class AuthController {
 
             return res.json({
                 message: "Login realizado",
-                token
+                token,
+
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email
+                }
             });
         }
     );

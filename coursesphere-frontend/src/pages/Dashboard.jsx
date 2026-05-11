@@ -29,6 +29,8 @@ export default function Dashboard() {
 
     const [editEndDate, setEditEndDate] = useState("");
 
+    const user = JSON.parse(localStorage.getItem("user"));
+
     async function loadCourses() {
 
         try {
@@ -285,7 +287,11 @@ export default function Dashboard() {
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 
                         {
-                            courses.map((course) => (
+                            courses.map((course) => {
+
+                                const isOwner = Number(course.creator_id) === Number(user.id);
+
+                                return (
 
                                 <div
                                     key={course.id}
@@ -374,7 +380,19 @@ export default function Dashboard() {
                                         onClick={() =>
                                             handleDeleteCourse(course.id)
                                         }
-                                        className="ml-3 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg"
+                                        disabled={!isOwner}
+
+                                        title={
+                                            isOwner
+                                            ? ""
+                                            : "Apenas o criador pode deletar"
+                                        }
+
+                                        className={
+                                            isOwner
+                                            ? "ml-3 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg"
+                                            : "ml-3 bg-gray-300 text-gray-500 px-4 py-2 rounded-lg cursor-not-allowed"
+                                        }
                                     >
                                         Deletar
                                     </button>
@@ -383,14 +401,27 @@ export default function Dashboard() {
                                         onClick={() =>
                                             handleStartEdit(course)
                                         }
-                                        className="ml-3 bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg"
+                                        disabled={!isOwner}
+
+                                        title={
+                                            isOwner
+                                            ? ""
+                                            : "Apenas o criador pode editar"
+                                        }
+
+                                        className={
+                                            isOwner
+                                            ? "ml-3 bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg"
+                                            : "ml-3 bg-gray-300 text-gray-500 px-4 py-2 rounded-lg cursor-not-allowed"
+                                        }
                                     >
                                         Editar
                                     </button>
 
                                 </div>
-                            ))
-                        }
+                            );
+                        })
+                    }
 
                     </div>
 
