@@ -31,6 +31,8 @@ export default function Dashboard() {
 
     const user = JSON.parse(localStorage.getItem("user"));
 
+    const [search, setSearch] = useState("");
+
     async function loadCourses() {
 
         try {
@@ -187,6 +189,12 @@ export default function Dashboard() {
 
     }, []);
 
+    const filteredCourses = courses.filter((course) =>
+        course.name
+            .toLowerCase()
+            .includes(search.toLowerCase())
+    );
+
     return (
 
         <div className="min-h-screen bg-gray-100">
@@ -284,10 +292,29 @@ export default function Dashboard() {
                         Cursos
                     </h2>
 
+                    <input
+                        type="text"
+                        placeholder="Buscar curso..."
+                        value={search}
+                        onChange={(event) =>
+                            setSearch(event.target.value)
+                        }
+                        className="w-full border rounded-lg p-3 mb-6"
+                    />
+
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 
                         {
-                            courses.map((course) => {
+                            filteredCourses.length === 0 && (
+
+                                <p className="text-gray-500">
+                                    Nenhum curso encontrado
+                                </p>
+                            )
+                        }
+                        
+                        {
+                            filteredCourses.map((course) => {
 
                                 const isOwner = Number(course.creator_id) === Number(user.id);
 
