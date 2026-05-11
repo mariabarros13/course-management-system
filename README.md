@@ -1,6 +1,6 @@
 # CourseSphere
 
-Sistema full stack para gerenciamento de cursos e lessons.
+Sistema full stack para gerenciamento de cursos e lessons com autenticação JWT, permissões de usuário e integração com API externa.
 
 ## Preview
 
@@ -47,17 +47,18 @@ O sistema permite:
 
 ## Cursos
 
-- Criar curso
-- Editar curso
-- Deletar curso
-- Listar cursos
+- CRUD completo
+- Busca por nome
+- Controle de permissões
+- Apenas criador pode editar/deletar
 
 ## Lessons
 
-- Criar lesson
-- Editar lesson
-- Deletar lesson
-- Listar lessons
+- CRUD completo
+- Status draft/published
+
+### Integrações
+- API externa com instrutor convidado
 
 ---
 
@@ -131,22 +132,16 @@ http://localhost:5173
 
 ---
 
-# Funcionalidades futuras
+# Melhorias futuras
 
 - Deploy
 - PostgreSQL
 - Upload de imagens
-- Sistema de usuários
-- Toast notifications
 - Dark mode
 - TypeScript
 
 ---
 
-# Autor
+## Licença
 
-<<<<<<< HEAD
-Luiza
-=======
-Luiza
->>>>>>> 9bd9a4ab7d18479979d93eacc6d7cec1d2628a1c
+Projeto desenvolvido para fins educacionais.
