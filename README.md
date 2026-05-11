@@ -145,4 +145,8 @@ http://localhost:5173
 
 # Autor
 
+<<<<<<< HEAD
 Luiza
+=======
+Luiza
+>>>>>>> 9bd9a4ab7d18479979d93eacc6d7cec1d2628a1c

@@ -29,6 +29,8 @@ export default function CourseDetails() {
 
     const [editVideoUrl, setEditVideoUrl] = useState("");
 
+    const [guestInstructor, setGuestInstructor] = useState(null);
+    
     async function loadCourse() {
 
         try {
@@ -183,10 +185,29 @@ export default function CourseDetails() {
             alert("Erro ao editar lesson");
         }
     }
+    async function loadGuestInstructor() {
+
+        try {
+
+            const response = await fetch(
+                "https://randomuser.me/api/"
+            );
+
+            const data = await response.json();
+
+            setGuestInstructor(data.results[0]);
+
+        } catch (error) {
+
+            console.log(error);
+        }
+    }
 
     useEffect(() => {
 
         loadCourse();
+
+        loadGuestInstructor();
 
     }, []);
 
@@ -204,6 +225,35 @@ export default function CourseDetails() {
             <p>
                 {course.description}
             </p>
+
+            {
+                guestInstructor && (
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mb-6 flex items-center gap-4">
+
+                        <img
+                            src={guestInstructor.picture.large}
+                            alt="Instrutor"
+                            className="w-16 h-16 rounded-full"
+                        />
+
+                        <div>
+
+                            <h3 className="font-bold text-lg text-blue-700">
+                                Instrutor Convidado
+                            </h3>
+
+                            <p className="text-gray-700">
+                                {guestInstructor.name.first}
+                                {" "}
+                                {guestInstructor.name.last}
+                            </p>
+
+                        </div>
+
+                    </div>
+                )
+            }
 
             <p>
                 Criado por:
