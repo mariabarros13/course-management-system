@@ -1,19 +1,33 @@
+const path = require("path");
+
 const db = require("../database/db");
+const { dbGet, dbRun } = require("../database/dbHelpers");
+const { enqueueTranscriptionJob } = require("../queues/transcriptionQueue");
 
 class LessonController {
 
-    static create(req, res) {
+    // PONTO CRÍTICO: este método foi reescrito em async/await (usando os
+    // helpers de Promise de dbHelpers.js) para poder aguardar o INSERT antes
+    // de disparar o job — os outros métodos da classe (delete, update,
+    // indexByCourse) continuam com callback, propositalmente intocados,
+    // para manter o diff focado só na funcionalidade de legendas.
+    static async create(req, res) {
 
         const {
             title,
             status,
-            video_url,
             course_id
         } = req.body;
 
+        // Compatibilidade com o fluxo antigo: continua aceitando video_url
+        // já pronto no body (ex: vídeo hospedado externamente). Quando vem
+        // um arquivo via multipart (req.file), ele tem prioridade.
+        const videoUrlFromBody = req.body.video_url;
+        const uploadedVideoPath = req.file?.path;
+
         const user_id = req.user.id;
 
-        // validações
+        // validações (mantidas como já existiam)
         if (!title || !status || !course_id) {
 
             return res.status(400).json({
@@ -28,7 +42,6 @@ class LessonController {
             });
         }
 
-        // status válido
         if (
             status !== "draft" &&
             status !== "published"
@@ -39,67 +52,109 @@ class LessonController {
             });
         }
 
-        // verifica se curso existe
-        db.get(
-            "SELECT * FROM courses WHERE id = ?",
-            [course_id],
-            (err, course) => {
+        try {
 
-                if (err) {
+            // verifica se curso existe
+            const course = await dbGet(
+                "SELECT * FROM courses WHERE id = ?",
+                [course_id]
+            );
 
-                    return res.status(500).json({
-                        error: "Erro no banco"
-                    });
-                }
-
-                if (!course) {
-
-                    return res.status(404).json({
-                        error: "Curso não encontrado"
-                    });
-                }
-
-                // verifica dono do curso
-                if (
-                        Number(course.creator_id) !==
-                        Number(user_id)
-                ) {
-
-                    return res.status(403).json({
-                        error: "Sem permissão"
-                    });
-                }
-
-                // cria lesson
-                db.run(
-                    `
-                    INSERT INTO lessons
-                    (title, status, video_url, course_id)
-                    VALUES (?, ?, ?, ?)
-                    `,
-                    [
-                        title,
-                        status,
-                        video_url,
-                        course_id
-                    ],
-                    function(err) {
-
-                        if (err) {
-
-                            return res.status(500).json({
-                                error: "Erro ao criar aula"
-                            });
-                        }
-
-                        return res.status(201).json({
-                            message: "Lesson criada",
-                            lessonId: this.lastID
-                        });
-                    }
-                );
+            if (!course) {
+                return res.status(404).json({
+                    error: "Curso não encontrado"
+                });
             }
-        );
+
+            // verifica dono do curso
+            if (Number(course.creator_id) !== Number(user_id)) {
+                return res.status(403).json({
+                    error: "Sem permissão"
+                });
+            }
+
+            // video_url salvo no banco: prioriza o arquivo enviado nesta requisição
+            const videoUrl = uploadedVideoPath
+                ? `/uploads/videos/${path.basename(uploadedVideoPath)}`
+                : (videoUrlFromBody || null);
+
+            // cria lesson
+            const { lastID: lessonId } = await dbRun(
+                `
+                INSERT INTO lessons
+                (title, status, video_url, course_id)
+                VALUES (?, ?, ?, ?)
+                `,
+                [title, status, videoUrl, course_id]
+            );
+
+            // PONTO CRÍTICO (requisito 4): dispara o job em background e NÃO
+            // aguarda (sem await na chamada da Promise) — a resposta HTTP
+            // volta imediatamente, sem esperar a transcrição. Falha ao
+            // enfileirar é só logada; não derruba a criação da aula, que já
+            // foi concluída com sucesso.
+            if (videoUrl) {
+                enqueueTranscriptionJob({
+                    lessonId,
+                    videoPath: uploadedVideoPath || null,
+                    videoUrl: uploadedVideoPath ? null : videoUrl
+                }).catch((err) => {
+                    console.error(
+                        `Erro ao enfileirar transcrição da lesson ${lessonId}:`,
+                        err.message
+                    );
+                });
+            }
+
+            return res.status(201).json({
+                message: "Lesson criada",
+                lessonId,
+                subtitleStatus: videoUrl ? "processing" : "none"
+            });
+
+        } catch (err) {
+
+            console.error("Erro ao criar lesson:", err.message);
+
+            return res.status(500).json({
+                error: "Erro ao criar aula"
+            });
+        }
+    }
+
+    // Endpoint simples para o frontend perguntar "a legenda já ficou pronta?"
+    // (polling), já que o processamento é assíncrono e não há webhook aqui.
+    static async subtitleStatus(req, res) {
+
+        const { id } = req.params;
+
+        try {
+
+            const lesson = await dbGet(
+                `
+                SELECT id, subtitle_status, subtitle_url, subtitle_error
+                FROM lessons
+                WHERE id = ?
+                `,
+                [id]
+            );
+
+            if (!lesson) {
+                return res.status(404).json({
+                    error: "Lesson não encontrada"
+                });
+            }
+
+            return res.json(lesson);
+
+        } catch (err) {
+
+            console.error("Erro ao consultar status da legenda:", err.message);
+
+            return res.status(500).json({
+                error: "Erro no banco"
+            });
+        }
     }
     static indexByCourse(req, res) {
 

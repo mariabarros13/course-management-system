@@ -1,7 +1,11 @@
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 
 const db = require("./database/db");
+
+const { UPLOADS_ROOT } = require("./config/paths");
 
 const authRoutes = require("./routes/authRoutes");
 
@@ -18,6 +22,10 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Serve os vídeos enviados e as legendas geradas
+// (ex: GET /uploads/subtitles/lesson-1.vtt)
+app.use("/uploads", express.static(UPLOADS_ROOT));
 
 app.use("/auth", authRoutes);
 
@@ -38,7 +46,15 @@ app.get("/profile", authMiddleware, (req, res) => {
 
 });
 
-const PORT = 3000;
+// Error handler genérico — captura, por exemplo, falhas do multer
+// (arquivo grande demais, formato de vídeo inválido) lançadas antes do
+// controller, e qualquer outro erro síncrono não tratado nas rotas.
+app.use((err, req, res, next) => {
+    console.error("Erro não tratado:", err.message);
+    return res.status(400).json({ error: err.message || "Erro inesperado" });
+});
+
+const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
