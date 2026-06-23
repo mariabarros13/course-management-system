@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* PONTO CRÍTICO: foco visível em TODO elemento interativo, não só nos que o
+   navegador decide sozinho. Sem isso, quem navega por teclado (incluindo
+   parte do público surdo que não usa leitor de tela, mas usa teclado/switch)
+   perde a aula de onde o foco está na página. */
+:focus-visible {
+    outline: 3px solid theme("colors.primary.600");
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Respeita quem configurou o sistema para reduzir animações. */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+.sr-only-focusable {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+}
+
+.sr-only-focusable:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+}
