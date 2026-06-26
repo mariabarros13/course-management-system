@@ -1,5 +1,7 @@
 const db = require("../database/db");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const { JWT_SECRET, JWT_EXPIRES_IN } = require("../config/auth");
 
 class AuthController {
 
@@ -106,16 +108,14 @@ class AuthController {
             }
 
             // gera token
-            const jwt = require("jsonwebtoken");
-
             const token = jwt.sign(
                 {
                     id: user.id,
                     email: user.email
                 },
-                "segredo_super_secreto",
+                JWT_SECRET,
                 {
-                    expiresIn: "1d"
+                    expiresIn: JWT_EXPIRES_IN
                 }
             );
 

@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { JWT_SECRET } = require("../config/auth");
 
 function authMiddleware(req, res, next) {
 
@@ -16,7 +17,7 @@ function authMiddleware(req, res, next) {
 
         const decoded = jwt.verify(
             token,
-            "segredo_super_secreto"
+            JWT_SECRET
         );
 
         req.user = decoded;
