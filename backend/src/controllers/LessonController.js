@@ -243,6 +243,20 @@ class LessonController {
                         });
                     }
 
+                    // PONTO CRÍTICO: sem este check, uma lesson "órfã" (cujo
+                    // curso foi deletado) faz `course` chegar aqui como
+                    // undefined. Acessar course.creator_id direto lançaria
+                    // TypeError dentro deste callback assíncrono do driver —
+                    // o que não é capturado por try/catch nenhum nem pelo
+                    // error handler do Express, e derruba o processo Node
+                    // inteiro (todo mundo cai, não só esta requisição).
+                    if (!course) {
+
+                        return res.status(404).json({
+                            error: "Curso da aula não encontrado"
+                        });
+                    }
+
                     // verifica dono
                     if (
                         Number(course.creator_id) !==
@@ -344,6 +358,16 @@ class LessonController {
 
                         return res.status(500).json({
                             error: "Erro no banco"
+                        });
+                    }
+
+                    // PONTO CRÍTICO: mesma proteção aplicada em
+                    // LessonController.delete — sem isso, atualizar uma
+                    // lesson órfã (curso já deletado) derruba o processo.
+                    if (!course) {
+
+                        return res.status(404).json({
+                            error: "Curso da aula não encontrado"
                         });
                     }
 

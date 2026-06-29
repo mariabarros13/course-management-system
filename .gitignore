@@ -2,3 +2,8 @@ node_modules
 .env
 dist
 coverage
+
+# Banco SQLite local (contém dados reais: senhas com hash, emails, etc.
+# Nunca deveria ter sido commitado)
+*.db
+*.db-journal

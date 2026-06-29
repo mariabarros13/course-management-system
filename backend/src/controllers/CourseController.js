@@ -269,21 +269,47 @@ class CourseController {
             }
 
             // remove curso
+            //
+            // PONTO CRÍTICO: o banco NÃO tem ON DELETE CASCADE na FK de
+            // lessons.course_id (e nem roda PRAGMA foreign_keys = ON), então
+            // sem este passo o DELETE abaixo deixaria lessons "órfãs"
+            // (course_id apontando pra um curso que não existe mais).
+            // LessonController.delete/update assumem que toda lesson tem um
+            // curso válido e não verificam null antes de ler
+            // course.creator_id — uma lesson órfã faz esse acesso lançar
+            // TypeError dentro de um callback assíncrono do driver, o que
+            // não é capturado por nada e derruba o processo Node inteiro.
+            // Apagamos as lessons do curso primeiro para nunca chegar nesse
+            // estado.
             db.run(
-                "DELETE FROM courses WHERE id = ?",
+                "DELETE FROM lessons WHERE course_id = ?",
                 [id],
-                function(err) {
+                (lessonsErr) => {
 
-                    if (err) {
+                    if (lessonsErr) {
 
                         return res.status(500).json({
-                            error: "Erro ao deletar curso"
+                            error: "Erro ao remover aulas do curso"
                         });
                     }
 
-                    return res.json({
-                        message: "Curso deletado"
-                    });
+                    db.run(
+                        "DELETE FROM courses WHERE id = ?",
+                        [id],
+                        function(err) {
+
+                            if (err) {
+
+                                return res.status(500).json({
+                                    error: "Erro ao deletar curso"
+                                });
+                            }
+
+                            return res.json({
+                                message: "Curso e suas aulas foram deletados"
+                            });
+                        }
+                    );
                 }
             );
         }

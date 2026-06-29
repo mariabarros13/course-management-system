@@ -21,7 +21,10 @@ export default function LoginPage() {
     try {
       const response = await login(email, password);
       localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify({ email, id: response.id }));
+      // A API retorna { message, token, user: { id, name, email } } —
+      // "response.id" não existe (sempre virava undefined e era removido
+      // pelo JSON.stringify, então o id nunca era salvo).
+      localStorage.setItem('user', JSON.stringify(response.user));
       router.push('/');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao fazer login');

@@ -8,6 +8,7 @@ import { register } from '@/lib/api';
 
 export default function CadastroPage() {
   const router = useRouter();
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -17,6 +18,11 @@ export default function CadastroPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    if (!name.trim()) {
+      setError('Informe seu nome');
+      return;
+    }
 
     if (password !== confirmPassword) {
       setError('As senhas não conferem');
@@ -31,7 +37,7 @@ export default function CadastroPage() {
     setLoading(true);
 
     try {
-      await register(email, password);
+      await register(name, email, password);
       router.push('/login?registered=true');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erro ao cadastrar');
@@ -56,6 +62,21 @@ export default function CadastroPage() {
               {error}
             </div>
           )}
+
+          <div>
+            <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+              Nome
+            </label>
+            <input
+              id="name"
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600"
+              placeholder="Seu nome completo"
+            />
+          </div>
 
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
